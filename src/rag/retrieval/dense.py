@@ -1,4 +1,4 @@
-class DenseRetrieval:
+class DenseRetriever:
 
     def __init__(
         self,

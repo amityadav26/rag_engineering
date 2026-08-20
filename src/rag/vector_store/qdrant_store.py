@@ -27,7 +27,7 @@ class QdrantVectorStore:
     def _create_collection(self):
 
         collections = (
-            self.client.get_collection().collections 
+            self.client.get_collections().collections 
         )
 
         collection_names = [
@@ -54,18 +54,21 @@ class QdrantVectorStore:
 
         points = []
 
-        for document, embedding in zip(
+        for idx, (document, embedding) in enumerate(
+            zip(
             documents, embeddings
+            )
         ):
             points.append(
                 PointStruct(
-                    id=document["id"],
+                    id=idx + 1,
                     vector=embedding.tolist(),
                     payload={
                         "text": document["text"],
                         "metadata": document.get(
                             "metadata", {}
-                        )
+                        ),
+                        "original_id": document["id"]
                     }
                 )
             )
@@ -90,10 +93,10 @@ class QdrantVectorStore:
 
         return [
             {
-                "id": result.id,
+                "id": result.payload.get("original_id", result.id),
                 "score": result.score,
-                "text": payload["text"],
-                "metadata": result.get("metadata", {})
+                "text": result.payload["text"],
+                "metadata": result.payload.get("metadata", {})
             }
             for result in results 
         ]

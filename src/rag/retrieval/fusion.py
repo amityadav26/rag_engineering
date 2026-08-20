@@ -27,7 +27,7 @@ def reciprocal_rank_fusion(
 
     fused_result = []
 
-    for doc_id, score in rrf_score.items():
+    for doc_id, score in rrf_scores.items():
 
         result = documents[doc_id].copy()
 
@@ -37,7 +37,7 @@ def reciprocal_rank_fusion(
 
     fused_result.sort(
         key=lambda x: x["rrf_score"],
-        reverse=True 
+        reverse=True
     )
 
     return fused_result[:top_n]

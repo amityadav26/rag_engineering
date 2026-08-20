@@ -12,7 +12,7 @@ class EmbeddingModel:
         self.model = SentenceTransformer(model_name)
 
     
-    def embed_document(self, texts):
+    def embed_documents(self, texts):
 
         return self.model.encode(
             texts,
