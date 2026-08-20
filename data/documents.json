@@ -1,0 +1,34 @@
+[
+    {
+        "id": "doc_001",
+        "text": "Employees can work remotely up to three days per week.",
+        "metadata": {
+            "department": "HR",
+            "source": "remote_work_policy"
+        }
+    },
+    {
+        "id": "doc_002",
+        "text": "ERR_CONNECTION_RESET occurs when the network connection is unexpectedly closed.",
+        "metadata": {
+            "department": "Engineering",
+            "source": "networking_guide"
+        }
+    },
+    {
+        "id": "doc_003",
+        "text": "Production deployments require approval from an engineering lead.",
+        "metadata": {
+            "department": "Engineering",
+            "source": "deployment_policy"
+        }
+    },
+    {
+        "id": "doc_004",
+        "text": "Incident INC-48291 was caused by a database connection timeout.",
+        "metadata": {
+            "department": "Operations",
+            "source": "incident_report"
+        }
+    }
+]

@@ -3,3 +3,9 @@ notebook/
 __pycache/
 .env
 .DS_Store
+
+rag-venv/
+venv/
+env/
+.venv/
+.env/
