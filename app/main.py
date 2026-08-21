@@ -24,6 +24,10 @@ from src.rag.reranking.cross_encoder import (
     CrossEncoderReranker
 )
 
+from src.rag.query.multi_query import (
+    MultiQueryRetriever
+)
+
 
 def load_documents(path):
 
@@ -34,6 +38,32 @@ def load_documents(path):
     ) as file:
 
         return json.load(file)
+
+
+def print_results(
+    title,
+    results,
+    score_key=None
+):
+
+    print(f"\n===== {title} =====")
+
+    for result in results:
+
+        if score_key:
+
+            print(
+                result["id"],
+                result.get(score_key),
+                result["text"]
+            )
+
+        else:
+
+            print(
+                result["id"],
+                result["text"]
+            )
 
 
 def main():
@@ -76,7 +106,7 @@ def main():
     )
 
     # -------------------------
-    # 5. Store in Qdrant
+    # 5. Store documents
     # -------------------------
 
     vector_store.add_documents(
@@ -98,15 +128,52 @@ def main():
     )
 
     # -------------------------
-    # 7. Query
+    # 7. Create Multi-Query
     # -------------------------
 
-    query = (
-        "what is ERR_CONNECTION_RESET means?"
+    multi_query_retriever = MultiQueryRetriever(
+        dense_retriever=dense_retriever,
+        sparse_retriever=sparse_retriever,
+        fusion_function=reciprocal_rank_fusion
     )
 
     # -------------------------
-    # 8. Dense retrieval
+    # 8. Create Reranker
+    # -------------------------
+
+    reranker = CrossEncoderReranker()
+
+    # -------------------------
+    # 9. Original Query
+    # -------------------------
+
+    query = (
+        "What causes TCP connection resets?"
+    )
+
+    # -------------------------
+    # 10. Manually generated
+    #     Multi-Queries
+    # -------------------------
+
+    multi_queries = [
+
+        "What causes ERR_CONNECTION_RESET?",
+
+        "What causes TCP connection resets?",
+
+        "How can ERR_CONNECTION_RESET be diagnosed?",
+
+        "What server problems cause connection resets?"
+
+    ]
+
+    # =====================================================
+    # BASELINE HYBRID PIPELINE
+    # =====================================================
+
+    # -------------------------
+    # 11. Dense Retrieval
     # -------------------------
 
     dense_results = (
@@ -117,7 +184,7 @@ def main():
     )
 
     # -------------------------
-    # 9. Sparse retrieval
+    # 12. Sparse Retrieval
     # -------------------------
 
     sparse_results = (
@@ -128,7 +195,7 @@ def main():
     )
 
     # -------------------------
-    # 10. Hybrid retrieval
+    # 13. Hybrid / RRF
     # -------------------------
 
     hybrid_results = (
@@ -138,15 +205,13 @@ def main():
                 sparse_results
             ],
             k=60,
-            top_n=5
+            top_n=10
         )
     )
 
-    # ------------------------
-    # 11. Reranker(Neural reranking)
-    # ------------------------
-
-    reranker = CrossEncoderReranker()
+    # -------------------------
+    # 14. Neural Reranking
+    # -------------------------
 
     final_results = reranker.rerank(
         query=query,
@@ -154,46 +219,97 @@ def main():
         top_k=3
     )
 
+    # =====================================================
+    # MULTI-QUERY PIPELINE
+    # =====================================================
+
     # -------------------------
-    # 11. Print results
+    # 15. Multi-Query Retrieval
     # -------------------------
 
-    print("\n===== DENSE =====")
-
-    for result in dense_results:
-        print(
-            result["id"],
-            result["score"],
-            result["text"]
+    multi_query_results = (
+        multi_query_retriever.retrieve(
+            queries=multi_queries,
+            top_k=10,
+            final_top_k=10
         )
+    )
 
-    print("\n===== BM25 =====")
+    # -------------------------
+    # 16. Multi-Query Reranking
+    # -------------------------
 
-    for result in sparse_results:
-        print(
-            result["id"],
-            result["score"],
-            result["text"]
+    multi_query_final = (
+        reranker.rerank(
+            query=query,
+            documents=multi_query_results,
+            top_k=3
         )
+    )
 
-    print("\n===== HYBRID / RRF =====")
+    # =====================================================
+    # PRINT RESULTS
+    # =====================================================
 
-    for result in hybrid_results:
-        print(
-            result["id"],
-            result["rrf_score"],
-            result["text"]
-        )
+    # -------------------------
+    # Dense
+    # -------------------------
 
-    print("\n===== RERANKED =====")
+    print_results(
+        "DENSE",
+        dense_results,
+        score_key="score"
+    )
 
-    for result in final_results:
+    # -------------------------
+    # BM25
+    # -------------------------
 
-        print(
-            result["id"],
-            result["reranked_score"],
-            result["text"]
-        )
+    print_results(
+        "BM25 / SPARSE",
+        sparse_results,
+        score_key="score"
+    )
+
+    # -------------------------
+    # Hybrid / RRF
+    # -------------------------
+
+    print_results(
+        "HYBRID / RRF",
+        hybrid_results,
+        score_key="rrf_score"
+    )
+
+    # -------------------------
+    # Baseline Reranker
+    # -------------------------
+
+    print_results(
+        "HYBRID + CROSS ENCODER",
+        final_results,
+        score_key="reranked_score"
+    )
+
+    # -------------------------
+    # Multi-Query
+    # -------------------------
+
+    print_results(
+        "MULTI-QUERY",
+        multi_query_results,
+        score_key="rrf_score"
+    )
+
+    # -------------------------
+    # Multi-Query + Reranker
+    # -------------------------
+
+    print_results(
+        "MULTI-QUERY + CROSS ENCODER",
+        multi_query_final,
+        score_key="reranked_score"
+    )
 
 
 if __name__ == "__main__":
