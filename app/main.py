@@ -28,6 +28,10 @@ from src.rag.query.multi_query import (
     MultiQueryRetriever
 )
 
+from src.rag.query.query_expansion import (
+    QueryExpander
+)
+
 
 def load_documents(path):
 
@@ -151,22 +155,40 @@ def main():
         "What causes TCP connection resets?"
     )
 
+    query_expander = QueryExpander()
+
+    expanded_query = query_expander.expand(
+        query=query,
+        terms=[
+            "ERR_CONNECTION_RESET",
+            "TCP connection termination",
+            "connection reset by peer",
+            "network connection failure"
+        ]
+    )
+
+    print("\n ===== ORIGINAL QUERY =====")
+    print(query)
+
+    print("\n===== EXPANDED QUERY =====")
+    print(expanded_query)
+
     # -------------------------
     # 10. Manually generated
     #     Multi-Queries
     # -------------------------
 
-    multi_queries = [
+    # multi_queries = [
 
-        "What causes ERR_CONNECTION_RESET?",
+    #     "What causes ERR_CONNECTION_RESET?",
 
-        "What causes TCP connection resets?",
+    #     "What causes TCP connection resets?",
 
-        "How can ERR_CONNECTION_RESET be diagnosed?",
+    #     "How can ERR_CONNECTION_RESET be diagnosed?",
 
-        "What server problems cause connection resets?"
+    #     "What server problems cause connection resets?"
 
-    ]
+    # ]
 
     # =====================================================
     # BASELINE HYBRID PIPELINE
@@ -178,7 +200,7 @@ def main():
 
     dense_results = (
         dense_retriever.retrieve(
-            query,
+            expanded_query,
             top_k=10
         )
     )
@@ -189,7 +211,7 @@ def main():
 
     sparse_results = (
         sparse_retriever.retrieve(
-            query,
+            expanded_query,
             top_k=10
         )
     )
@@ -214,7 +236,7 @@ def main():
     # -------------------------
 
     final_results = reranker.rerank(
-        query=query,
+        query=expanded_query,
         documents=hybrid_results,
         top_k=3
     )
@@ -227,25 +249,25 @@ def main():
     # 15. Multi-Query Retrieval
     # -------------------------
 
-    multi_query_results = (
-        multi_query_retriever.retrieve(
-            queries=multi_queries,
-            top_k=10,
-            final_top_k=10
-        )
-    )
+    # multi_query_results = (
+    #     multi_query_retriever.retrieve(
+    #         queries=multi_queries,
+    #         top_k=10,
+    #         final_top_k=10
+    #     )
+    # )
 
-    # -------------------------
-    # 16. Multi-Query Reranking
-    # -------------------------
+    # # -------------------------
+    # # 16. Multi-Query Reranking
+    # # -------------------------
 
-    multi_query_final = (
-        reranker.rerank(
-            query=query,
-            documents=multi_query_results,
-            top_k=3
-        )
-    )
+    # multi_query_final = (
+    #     reranker.rerank(
+    #         query=query,
+    #         documents=multi_query_results,
+    #         top_k=3
+    #     )
+    # )
 
     # =====================================================
     # PRINT RESULTS
@@ -295,21 +317,21 @@ def main():
     # Multi-Query
     # -------------------------
 
-    print_results(
-        "MULTI-QUERY",
-        multi_query_results,
-        score_key="rrf_score"
-    )
+    # print_results(
+    #     "MULTI-QUERY",
+    #     multi_query_results,
+    #     score_key="rrf_score"
+    # )
 
-    # -------------------------
-    # Multi-Query + Reranker
-    # -------------------------
+    # # -------------------------
+    # # Multi-Query + Reranker
+    # # -------------------------
 
-    print_results(
-        "MULTI-QUERY + CROSS ENCODER",
-        multi_query_final,
-        score_key="reranked_score"
-    )
+    # print_results(
+    #     "MULTI-QUERY + CROSS ENCODER",
+    #     multi_query_final,
+    #     score_key="reranked_score"
+    # )
 
 
 if __name__ == "__main__":
