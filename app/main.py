@@ -20,6 +20,10 @@ from src.rag.retrieval.fusion import (
     reciprocal_rank_fusion
 )
 
+from src.rag.reranking.cross_encoder import (
+    CrossEncoderReranker
+)
+
 
 def load_documents(path):
 
@@ -98,7 +102,7 @@ def main():
     # -------------------------
 
     query = (
-        "What does ERR_CONNECTION_RESET mean?"
+        "what is ERR_CONNECTION_RESET means?"
     )
 
     # -------------------------
@@ -138,6 +142,18 @@ def main():
         )
     )
 
+    # ------------------------
+    # 11. Reranker(Neural reranking)
+    # ------------------------
+
+    reranker = CrossEncoderReranker()
+
+    final_results = reranker.rerank(
+        query=query,
+        documents=hybrid_results,
+        top_k=3
+    )
+
     # -------------------------
     # 11. Print results
     # -------------------------
@@ -166,6 +182,16 @@ def main():
         print(
             result["id"],
             result["rrf_score"],
+            result["text"]
+        )
+
+    print("\n===== RERANKED =====")
+
+    for result in final_results:
+
+        print(
+            result["id"],
+            result["reranked_score"],
             result["text"]
         )
 

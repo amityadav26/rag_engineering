@@ -1,34 +1,362 @@
 [
-    {
-        "id": "doc_001",
-        "text": "Employees can work remotely up to three days per week.",
-        "metadata": {
-            "department": "HR",
-            "source": "remote_work_policy"
-        }
-    },
-    {
-        "id": "doc_002",
-        "text": "ERR_CONNECTION_RESET occurs when the network connection is unexpectedly closed.",
-        "metadata": {
-            "department": "Engineering",
-            "source": "networking_guide"
-        }
-    },
-    {
-        "id": "doc_003",
-        "text": "Production deployments require approval from an engineering lead.",
-        "metadata": {
-            "department": "Engineering",
-            "source": "deployment_policy"
-        }
-    },
-    {
-        "id": "doc_004",
-        "text": "Incident INC-48291 was caused by a database connection timeout.",
-        "metadata": {
-            "department": "Operations",
-            "source": "incident_report"
-        }
+  {
+    "id": "doc_001",
+    "text": "Employees can work remotely up to three days per week.",
+    "metadata": {
+      "department": "HR",
+      "source": "remote_work_policy"
     }
+  },
+  {
+    "id": "doc_002",
+    "text": "ERR_CONNECTION_RESET occurs when the network connection is unexpectedly closed.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "networking_guide"
+    }
+  },
+  {
+    "id": "doc_003",
+    "text": "Production deployments require approval from an engineering lead.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "deployment_policy"
+    }
+  },
+  {
+    "id": "doc_004",
+    "text": "Incident INC-48291 was caused by a database connection timeout.",
+    "metadata": {
+      "department": "Operations",
+      "source": "incident_report"
+    }
+  },
+  {
+    "id": "doc_005",
+    "text": "Employees must submit vacation requests at least five business days before their planned leave.",
+    "metadata": {
+      "department": "HR",
+      "source": "leave_policy"
+    }
+  },
+  {
+    "id": "doc_006",
+    "text": "The engineering team uses Python for developing internal automation services.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "engineering_handbook"
+    }
+  },
+  {
+    "id": "doc_007",
+    "text": "Database connection timeouts can occur when a server takes too long to respond to a request.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "database_guide"
+    }
+  },
+  {
+    "id": "doc_008",
+    "text": "Employees should enable multi-factor authentication before accessing internal company applications.",
+    "metadata": {
+      "department": "Security",
+      "source": "authentication_policy"
+    }
+  },
+  {
+    "id": "doc_009",
+    "text": "The maximum allowed production deployment window is between 10 PM and 2 AM.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "deployment_policy"
+    }
+  },
+  {
+    "id": "doc_010",
+    "text": "A VPN is required when employees access internal resources from an external network.",
+    "metadata": {
+      "department": "Security",
+      "source": "remote_access_policy"
+    }
+  },
+  {
+    "id": "doc_011",
+    "text": "The company provides employees with twenty days of paid annual leave each year.",
+    "metadata": {
+      "department": "HR",
+      "source": "leave_policy"
+    }
+  },
+  {
+    "id": "doc_012",
+    "text": "HTTP 500 errors usually indicate an unexpected failure on the server side.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "api_troubleshooting"
+    }
+  },
+  {
+    "id": "doc_013",
+    "text": "Redis is used as an in-memory cache to reduce the response time of frequently accessed data.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "caching_guide"
+    }
+  },
+  {
+    "id": "doc_014",
+    "text": "Employees should report suspected phishing emails to the security team immediately.",
+    "metadata": {
+      "department": "Security",
+      "source": "security_awareness"
+    }
+  },
+  {
+    "id": "doc_015",
+    "text": "Incident INC-48295 was caused by an expired authentication token in the payment service.",
+    "metadata": {
+      "department": "Operations",
+      "source": "incident_report"
+    }
+  },
+  {
+    "id": "doc_016",
+    "text": "Docker containers provide isolated environments for running application services consistently across machines.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "docker_guide"
+    }
+  },
+  {
+    "id": "doc_017",
+    "text": "Employees must use company-approved laptops when handling confidential business information.",
+    "metadata": {
+      "department": "Security",
+      "source": "device_policy"
+    }
+  },
+  {
+    "id": "doc_018",
+    "text": "The API gateway validates authentication credentials before forwarding requests to backend services.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "api_architecture"
+    }
+  },
+  {
+    "id": "doc_019",
+    "text": "A database index improves query performance by allowing the database to locate records more efficiently.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "database_guide"
+    }
+  },
+  {
+    "id": "doc_020",
+    "text": "Employees are required to complete security awareness training once every year.",
+    "metadata": {
+      "department": "Security",
+      "source": "security_training"
+    }
+  },
+  {
+    "id": "doc_021",
+    "text": "The customer support team is available from 9 AM to 6 PM on business days.",
+    "metadata": {
+      "department": "Support",
+      "source": "support_policy"
+    }
+  },
+  {
+    "id": "doc_022",
+    "text": "FastAPI is used internally to build asynchronous HTTP APIs for backend services.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "backend_guide"
+    }
+  },
+  {
+    "id": "doc_023",
+    "text": "Incident INC-48301 occurred after a deployment introduced an invalid configuration value.",
+    "metadata": {
+      "department": "Operations",
+      "source": "incident_report"
+    }
+  },
+  {
+    "id": "doc_024",
+    "text": "Employees should lock their computer whenever they leave their workstation unattended.",
+    "metadata": {
+      "department": "Security",
+      "source": "security_awareness"
+    }
+  },
+  {
+    "id": "doc_025",
+    "text": "Load balancing distributes incoming traffic across multiple application servers to improve availability.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "infrastructure_guide"
+    }
+  },
+  {
+    "id": "doc_026",
+    "text": "The company requires passwords to contain at least twelve characters.",
+    "metadata": {
+      "department": "Security",
+      "source": "password_policy"
+    }
+  },
+  {
+    "id": "doc_027",
+    "text": "Production database backups are performed automatically every six hours.",
+    "metadata": {
+      "department": "Operations",
+      "source": "backup_policy"
+    }
+  },
+  {
+    "id": "doc_028",
+    "text": "A 404 response means that the requested resource could not be found on the server.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "api_troubleshooting"
+    }
+  },
+  {
+    "id": "doc_029",
+    "text": "Employees can request flexible working hours by submitting a request to their manager.",
+    "metadata": {
+      "department": "HR",
+      "source": "flexible_work_policy"
+    }
+  },
+  {
+    "id": "doc_030",
+    "text": "Vector databases store numerical representations of information so that semantically similar content can be retrieved efficiently.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "rag_guide"
+    }
+  },
+  {
+    "id": "doc_031",
+    "text": "The engineering team uses Git for version control and requires pull requests before merging changes into the main branch.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "development_policy"
+    }
+  },
+  {
+    "id": "doc_032",
+    "text": "Incident INC-48308 was triggered by excessive memory usage on the application server.",
+    "metadata": {
+      "department": "Operations",
+      "source": "incident_report"
+    }
+  },
+  {
+    "id": "doc_033",
+    "text": "Employees must notify their manager when they are unable to attend work because of illness.",
+    "metadata": {
+      "department": "HR",
+      "source": "attendance_policy"
+    }
+  },
+  {
+    "id": "doc_034",
+    "text": "Cosine similarity measures how closely two vector representations point in the same direction.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "vector_search_guide"
+    }
+  },
+  {
+    "id": "doc_035",
+    "text": "The application logs authentication failures to help security engineers investigate suspicious activity.",
+    "metadata": {
+      "department": "Security",
+      "source": "logging_policy"
+    }
+  },
+  {
+    "id": "doc_036",
+    "text": "A connection reset may happen when a remote server terminates an established network connection unexpectedly.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "networking_guide"
+    }
+  },
+  {
+    "id": "doc_037",
+    "text": "Employees can access the office building using their company-issued identification card.",
+    "metadata": {
+      "department": "HR",
+      "source": "office_access_policy"
+    }
+  },
+  {
+    "id": "doc_038",
+    "text": "Retrieval-Augmented Generation combines document retrieval with language generation to provide answers grounded in external information.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "rag_guide"
+    }
+  },
+  {
+    "id": "doc_039",
+    "text": "Database queries should use parameterized statements to reduce the risk of SQL injection attacks.",
+    "metadata": {
+      "department": "Security",
+      "source": "secure_coding_guide"
+    }
+  },
+  {
+    "id": "doc_040",
+    "text": "The deployment pipeline automatically runs unit tests before allowing an application to be released to production.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "ci_cd_policy"
+    }
+  },
+  {
+    "id": "doc_041",
+    "text": "Employees should store important company documents in the approved cloud storage system rather than on personal devices.",
+    "metadata": {
+      "department": "Security",
+      "source": "data_policy"
+    }
+  },
+  {
+    "id": "doc_042",
+    "text": "Semantic search can retrieve relevant documents even when the query uses different words from the original document.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "search_guide"
+    }
+  },
+  {
+    "id": "doc_043",
+    "text": "Incident INC-48317 was caused by a failed Redis cache connection that increased application latency.",
+    "metadata": {
+      "department": "Operations",
+      "source": "incident_report"
+    }
+  },
+  {
+    "id": "doc_044",
+    "text": "BM25 ranks documents using lexical term matching and considers factors such as term frequency and document length.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "retrieval_guide"
+    }
+  },
+  {
+    "id": "doc_045",
+    "text": "Dense retrieval converts queries and documents into embeddings and retrieves content based on vector similarity.",
+    "metadata": {
+      "department": "Engineering",
+      "source": "retrieval_guide"
+    }
+  }
 ]
