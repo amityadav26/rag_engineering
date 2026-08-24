@@ -37,6 +37,13 @@ from src.rag.retrieval.parent_child import (
     ParentChildRetriever
 )
 
+from src.rag.retrieval.contextual import (
+    ContextualChunker 
+)
+
+from src.rag.retrieval.compression import (
+    ContextualCompressor
+)
 
 def load_documents(path):
 
@@ -106,13 +113,32 @@ def main():
         chunk_overlap=10
     )
 
+    contextual_chunker = ContextualChunker(
+        chunker=chunker
+    )
+
+    document = parent_documents[0]
+
+    children = contextual_chunker.split(document)
+
+    print("\n====== CONTEXTUAL CHUNKS =======")
+
+    for child in children:
+
+        print("\nChild ID:", child["id"])
+
+        print("Original:", child["original_text"])
+
+        print("Contextual:", child["text"])
+
+
 
     all_children = []
 
 
     for document in parent_documents:
 
-        children = chunker.split(
+        children = contextual_chunker.split(
             document
         )
 
@@ -169,7 +195,7 @@ def main():
     vector_store = QdrantVectorStore(
 
         collection_name=(
-            "parent_child_rag"
+            "contextual_child_rag"
         ),
 
         vector_size=384
@@ -243,6 +269,10 @@ def main():
         )
     )
 
+    compressor = ContextualCompressor(
+        max_sentences=3
+    )
+
 
     # =========================================
     # 12. Query
@@ -282,6 +312,15 @@ def main():
         )
     )
 
+    parent_documents = [
+        result["parent"]
+        for result in results["parents"]
+    ]
+
+    compressed_results = compressor.compress(
+        query=query,
+        documents=parent_documents
+    )
 
     # =========================================
     # 14. Dense Results
@@ -389,6 +428,19 @@ def main():
             parent["text"]
         )
 
+
+
+        print(
+            "\n========= COMPRESSED CONTEXT=================" 
+        )
+
+        for document in compressed_results:
+
+            print(
+                "\nParent:", document["id"]
+            )
+
+            print(document["compressed_text"])
 
 if __name__ == "__main__":
 

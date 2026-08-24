@@ -60,6 +60,9 @@ class QdrantVectorStore:
 
             payload = {
                 "text": document["text"],
+
+                "original_text": document.get("original_text", document["text"]),
+
                 "metadata": document.get(
                     "metadata",
                     {}
