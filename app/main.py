@@ -8,28 +8,10 @@ from src.rag.vector_store.qdrant_store import (
     QdrantVectorStore
 )
 
-from src.rag.retrieval.dense import (
-    DenseRetriever
-)
-
-from src.rag.retrieval.sparse import (
-    BM25Retriever
-)
-
-from src.rag.retrieval.fusion import (
-    reciprocal_rank_fusion
-)
-
-from src.rag.reranking.cross_encoder import (
-    CrossEncoderReranker
-)
-
-from src.rag.query.multi_query import (
-    MultiQueryRetriever
-)
-
-from src.rag.query.query_expansion import (
-    QueryExpander
+from src.rag.retrieval.parent_child import (
+    ParentStore,
+    ChildChunker,
+    ParentChildRetriever
 )
 
 
@@ -44,294 +26,212 @@ def load_documents(path):
         return json.load(file)
 
 
-def print_results(
-    title,
-    results,
-    score_key=None
-):
-
-    print(f"\n===== {title} =====")
-
-    for result in results:
-
-        if score_key:
-
-            print(
-                result["id"],
-                result.get(score_key),
-                result["text"]
-            )
-
-        else:
-
-            print(
-                result["id"],
-                result["text"]
-            )
-
-
 def main():
 
-    # -------------------------
-    # 1. Load documents
-    # -------------------------
+    # =====================================================
+    # 1. LOAD PARENT DOCUMENTS
+    # =====================================================
 
-    documents = load_documents(
-        "data/documents.json"
+    parent_documents = load_documents(
+        "data/parent_documents.json"
     )
 
-    # -------------------------
-    # 2. Initialize embedding
-    # -------------------------
+    print(
+        f"Loaded parents: "
+        f"{len(parent_documents)}"
+    )
+
+
+    # =====================================================
+    # 2. CREATE PARENT STORE
+    # =====================================================
+
+    parent_store = ParentStore(
+        parent_documents
+    )
+
+    print(
+        "Parent store created."
+    )
+
+
+    # =====================================================
+    # 3. CREATE CHILD CHUNKS
+    # =====================================================
+
+    chunker = ChildChunker(
+        chunk_size=50,
+        chunk_overlap=10
+    )
+
+    all_children = []
+
+    for document in parent_documents:
+
+        children = chunker.split(
+            document
+        )
+
+        all_children.extend(
+            children
+        )
+
+
+    print(
+        f"Created children: "
+        f"{len(all_children)}"
+    )
+
+
+    # =====================================================
+    # 4. SHOW CHILD → PARENT RELATIONSHIP
+    # =====================================================
+
+    print(
+        "\n===== CHILD → PARENT ====="
+    )
+
+    for child in all_children:
+
+        print(
+            f"\nChild: {child['id']}"
+        )
+
+        print(
+            f"Parent: {child['parent_id']}"
+        )
+
+        print(
+            f"Text: {child['text'][:100]}..."
+        )
+
+
+    # =====================================================
+    # 5. INITIALIZE EMBEDDING MODEL
+    # =====================================================
 
     embedding_model = EmbeddingModel()
 
-    # -------------------------
-    # 3. Initialize Qdrant
-    # -------------------------
+
+    # =====================================================
+    # 6. CREATE CHILD EMBEDDINGS
+    # =====================================================
+
+    child_texts = [
+        child["text"]
+        for child in all_children
+    ]
+
+    child_embeddings = (
+        embedding_model
+        .embed_documents(
+            child_texts
+        )
+    )
+
+
+    print(
+        f"\nCreated embeddings: "
+        f"{len(child_embeddings)}"
+    )
+
+
+    # =====================================================
+    # 7. INITIALIZE QDRANT
+    # =====================================================
 
     vector_store = QdrantVectorStore(
-        collection_name="rag_documents",
+        collection_name="parent_child_rag",
         vector_size=384
     )
 
-    # -------------------------
-    # 4. Create embeddings
-    # -------------------------
 
-    texts = [
-        document["text"]
-        for document in documents
-    ]
-
-    embeddings = (
-        embedding_model
-        .embed_documents(texts)
-    )
-
-    # -------------------------
-    # 5. Store documents
-    # -------------------------
+    # =====================================================
+    # 8. STORE CHILDREN IN QDRANT
+    # =====================================================
 
     vector_store.add_documents(
-        documents,
-        embeddings
+        all_children,
+        child_embeddings
     )
 
-    # -------------------------
-    # 6. Create retrievers
-    # -------------------------
-
-    dense_retriever = DenseRetriever(
-        embedding_model,
-        vector_store
+    print(
+        "Children stored in Qdrant."
     )
 
-    sparse_retriever = BM25Retriever(
-        documents
+
+    # =====================================================
+    # 9. CREATE PARENT-CHILD RETRIEVER
+    # =====================================================
+
+    retriever = ParentChildRetriever(
+        embedding_model=embedding_model,
+        vector_store=vector_store,
+        parent_store=parent_store
     )
 
-    # -------------------------
-    # 7. Create Multi-Query
-    # -------------------------
 
-    multi_query_retriever = MultiQueryRetriever(
-        dense_retriever=dense_retriever,
-        sparse_retriever=sparse_retriever,
-        fusion_function=reciprocal_rank_fusion
-    )
-
-    # -------------------------
-    # 8. Create Reranker
-    # -------------------------
-
-    reranker = CrossEncoderReranker()
-
-    # -------------------------
-    # 9. Original Query
-    # -------------------------
+    # =====================================================
+    # 10. QUERY
+    # =====================================================
 
     query = (
-        "What causes TCP connection resets?"
+        "How many days can employees "
+        "work remotely?"
     )
 
-    query_expander = QueryExpander()
+    print(
+        f"\n===== QUERY =====\n"
+        f"{query}"
+    )
 
-    expanded_query = query_expander.expand(
+
+    # =====================================================
+    # 11. RETRIEVE PARENT
+    # =====================================================
+
+    results = retriever.retrieve(
         query=query,
-        terms=[
-            "ERR_CONNECTION_RESET",
-            "TCP connection termination",
-            "connection reset by peer",
-            "network connection failure"
-        ]
+        top_k=1
     )
 
-    print("\n ===== ORIGINAL QUERY =====")
-    print(query)
-
-    print("\n===== EXPANDED QUERY =====")
-    print(expanded_query)
-
-    # -------------------------
-    # 10. Manually generated
-    #     Multi-Queries
-    # -------------------------
-
-    # multi_queries = [
-
-    #     "What causes ERR_CONNECTION_RESET?",
-
-    #     "What causes TCP connection resets?",
-
-    #     "How can ERR_CONNECTION_RESET be diagnosed?",
-
-    #     "What server problems cause connection resets?"
-
-    # ]
 
     # =====================================================
-    # BASELINE HYBRID PIPELINE
+    # 12. PRINT PARENT RESULTS
     # =====================================================
 
-    # -------------------------
-    # 11. Dense Retrieval
-    # -------------------------
+    print(
+        "\n===== PARENT-CHILD RESULTS ====="
+    )
 
-    dense_results = (
-        dense_retriever.retrieve(
-            expanded_query,
-            top_k=10
+    for result in results:
+
+        print(
+            "\n-----------------------------"
         )
-    )
 
-    # -------------------------
-    # 12. Sparse Retrieval
-    # -------------------------
-
-    sparse_results = (
-        sparse_retriever.retrieve(
-            expanded_query,
-            top_k=10
+        print(
+            "Parent ID:",
+            result["id"]
         )
-    )
 
-    # -------------------------
-    # 13. Hybrid / RRF
-    # -------------------------
-
-    hybrid_results = (
-        reciprocal_rank_fusion(
-            rankings=[
-                dense_results,
-                sparse_results
-            ],
-            k=60,
-            top_n=10
+        print(
+            "Title:",
+            result["title"]
         )
-    )
 
-    # -------------------------
-    # 14. Neural Reranking
-    # -------------------------
+        print(
+            "Metadata:",
+            result["metadata"]
+        )
 
-    final_results = reranker.rerank(
-        query=expanded_query,
-        documents=hybrid_results,
-        top_k=3
-    )
+        print(
+            "\nComplete Parent Document:"
+        )
 
-    # =====================================================
-    # MULTI-QUERY PIPELINE
-    # =====================================================
-
-    # -------------------------
-    # 15. Multi-Query Retrieval
-    # -------------------------
-
-    # multi_query_results = (
-    #     multi_query_retriever.retrieve(
-    #         queries=multi_queries,
-    #         top_k=10,
-    #         final_top_k=10
-    #     )
-    # )
-
-    # # -------------------------
-    # # 16. Multi-Query Reranking
-    # # -------------------------
-
-    # multi_query_final = (
-    #     reranker.rerank(
-    #         query=query,
-    #         documents=multi_query_results,
-    #         top_k=3
-    #     )
-    # )
-
-    # =====================================================
-    # PRINT RESULTS
-    # =====================================================
-
-    # -------------------------
-    # Dense
-    # -------------------------
-
-    print_results(
-        "DENSE",
-        dense_results,
-        score_key="score"
-    )
-
-    # -------------------------
-    # BM25
-    # -------------------------
-
-    print_results(
-        "BM25 / SPARSE",
-        sparse_results,
-        score_key="score"
-    )
-
-    # -------------------------
-    # Hybrid / RRF
-    # -------------------------
-
-    print_results(
-        "HYBRID / RRF",
-        hybrid_results,
-        score_key="rrf_score"
-    )
-
-    # -------------------------
-    # Baseline Reranker
-    # -------------------------
-
-    print_results(
-        "HYBRID + CROSS ENCODER",
-        final_results,
-        score_key="reranked_score"
-    )
-
-    # -------------------------
-    # Multi-Query
-    # -------------------------
-
-    # print_results(
-    #     "MULTI-QUERY",
-    #     multi_query_results,
-    #     score_key="rrf_score"
-    # )
-
-    # # -------------------------
-    # # Multi-Query + Reranker
-    # # -------------------------
-
-    # print_results(
-    #     "MULTI-QUERY + CROSS ENCODER",
-    #     multi_query_final,
-    #     score_key="reranked_score"
-    # )
+        print(
+            result["text"]
+        )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,52 @@
+[
+  {
+    "id": "parent_001",
+    "title": "Remote Work Policy",
+    "metadata": {
+      "department": "HR",
+      "source": "remote_work_policy",
+      "year": 2025
+    },
+    "text": "Remote Work Policy. The company supports flexible remote working arrangements for eligible employees. Employees may work remotely when their role allows them to perform their responsibilities effectively outside the office. Eligibility depends on job responsibilities, team requirements, performance, and manager approval. Employees can work remotely up to three days per week under the standard remote work arrangement. The remaining working days are normally expected to be spent in the office unless an alternative arrangement has been approved. Employees must coordinate their remote working schedule with their manager and team so that important meetings, collaboration sessions, and customer commitments are properly supported. Employees working remotely must maintain a reliable internet connection and use company-approved devices. Company systems must be accessed through the approved VPN when required by security policy. Sensitive company information must not be accessed from unsecured public networks. Managers may temporarily require employees to work from the office when business requirements, training, team collaboration, or customer activities make physical presence necessary. Employees who are in their probation period may have additional restrictions on remote work depending on their role and manager approval. Remote work arrangements may be reviewed periodically and can be changed when business requirements or employee performance require an adjustment."
+  },
+  {
+    "id": "parent_002",
+    "title": "Employee Leave Policy",
+    "metadata": {
+      "department": "HR",
+      "source": "leave_policy",
+      "year": 2025
+    },
+    "text": "Employee Leave Policy. Full-time employees receive annual paid leave according to their employment terms and company policy. Employees should submit planned leave requests through the HR system before taking time off. Managers are responsible for reviewing leave requests and ensuring that team workload and business requirements are considered. Employees should normally provide advance notice for planned vacations and extended absences. Sick leave may be requested when an employee is unable to work because of illness or a medical condition. Employees should notify their manager as soon as reasonably possible when unexpected illness prevents them from working. Certain types of extended leave may require supporting documentation according to company policy and applicable regulations. Unused annual leave may be carried forward subject to company limits and approval requirements. Employees should review their available leave balance before submitting a request. During critical business periods, managers may coordinate leave schedules to ensure adequate team coverage. Leave approval depends on staffing requirements and does not automatically occur simply because an employee has available leave."
+  },
+  {
+    "id": "parent_003",
+    "title": "Information Security Policy",
+    "metadata": {
+      "department": "IT",
+      "source": "security_policy",
+      "year": 2025
+    },
+    "text": "Information Security Policy. Employees are responsible for protecting company information and systems from unauthorized access. Company accounts must use strong passwords and multi-factor authentication when required. Passwords must not be shared with other employees or stored in insecure locations. Employees should lock their computers when leaving their workspace and must not allow unauthorized individuals to use company devices. Remote employees must use approved security controls when accessing internal systems. Public Wi-Fi networks should not be used for sensitive operations unless the connection is protected by approved security mechanisms. Employees must report suspected security incidents, phishing messages, lost devices, or unauthorized access to the IT security team as soon as possible. Software should only be installed from approved sources. Employees must not disable endpoint security controls without authorization. Access to confidential information should be limited to employees who require that information to perform their job responsibilities."
+  },
+  {
+    "id": "parent_004",
+    "title": "Software Development Guidelines",
+    "metadata": {
+      "department": "Engineering",
+      "source": "development_guidelines",
+      "year": 2025
+    },
+    "text": "Software Development Guidelines. Engineers should follow the team's established development workflow when creating or modifying software. New features should be developed in separate branches so that changes can be reviewed before they are merged into the main branch. Pull requests should contain a clear description of the change, relevant testing information, and any known limitations. Code reviews are required before production changes are merged. Automated tests should be added for new functionality whenever practical. Developers should avoid committing secrets, API keys, passwords, or other sensitive credentials to source control. Configuration values should be managed using appropriate environment configuration or secret management systems. Production deployments should follow the approved deployment process. Engineers should monitor applications after significant releases and investigate unexpected errors or performance problems. Documentation should be updated when a change modifies system behavior, configuration, or operational procedures."
+  },
+  {
+    "id": "parent_005",
+    "title": "Employee Expense Policy",
+    "metadata": {
+      "department": "Finance",
+      "source": "expense_policy",
+      "year": 2025
+    },
+    "text": "Employee Expense Policy. Employees may claim reimbursement for reasonable business expenses incurred while performing authorized company activities. Expenses should be submitted through the company expense management system within the required submission period. Receipts should be retained and attached to expense claims when required. Business travel expenses may include transportation, accommodation, and meals when they are within the company's approved limits. Employees should select reasonably priced travel options and follow company travel guidelines. Personal expenses are not reimbursable. Managers are responsible for reviewing expense claims and confirming that expenses are business-related and comply with company policy. Finance may request additional documentation when an expense claim does not contain sufficient information. Employees should not divide a single expense into multiple claims to avoid approval limits. Reimbursement is normally processed after the claim has passed the required approval and finance review steps."
+  }
+]

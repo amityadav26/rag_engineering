@@ -47,35 +47,44 @@ class QdrantVectorStore:
 
     
     def add_documents(
-        self,
-        documents,
-        embeddings
+    self,
+    documents,
+    embeddings
     ):
 
         points = []
 
         for idx, (document, embedding) in enumerate(
-            zip(
-            documents, embeddings
-            )
+            zip(documents, embeddings)
         ):
+
+            payload = {
+                "text": document["text"],
+                "metadata": document.get(
+                    "metadata",
+                    {}
+                ),
+                "original_id": document["id"]
+            }
+
+            # Parent-child documents
+            if "parent_id" in document:
+
+                payload["parent_id"] = (
+                    document["parent_id"]
+                )
+
             points.append(
                 PointStruct(
                     id=idx + 1,
                     vector=embedding.tolist(),
-                    payload={
-                        "text": document["text"],
-                        "metadata": document.get(
-                            "metadata", {}
-                        ),
-                        "original_id": document["id"]
-                    }
+                    payload=payload
                 )
             )
-        
+
         self.client.upsert(
             collection_name=self.collection_name,
-            points=points 
+            points=points
         )
 
 
@@ -93,9 +102,17 @@ class QdrantVectorStore:
 
         return [
             {
-                "id": result.payload.get("original_id", result.id),
+                "id": result.payload.get(
+                    "original_id",
+                    result.id
+                ),
+
                 "score": result.score,
+
                 "text": result.payload["text"],
+                
+                "parent_id": result.payload.get("parent_id"),
+                
                 "metadata": result.payload.get("metadata", {})
             }
             for result in results 
