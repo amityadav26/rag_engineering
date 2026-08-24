@@ -1,12 +1,35 @@
 import json
 
+
 from src.rag.embeddings.embedding_model import (
     EmbeddingModel
 )
 
+
 from src.rag.vector_store.qdrant_store import (
     QdrantVectorStore
 )
+
+
+from src.rag.retrieval.dense import (
+    DenseRetriever
+)
+
+
+from src.rag.retrieval.sparse import (
+    BM25Retriever
+)
+
+
+from src.rag.retrieval.fusion import (
+    reciprocal_rank_fusion
+)
+
+
+from src.rag.reranking.cross_encoder import (
+    CrossEncoderReranker
+)
+
 
 from src.rag.retrieval.parent_child import (
     ParentStore,
@@ -26,45 +49,66 @@ def load_documents(path):
         return json.load(file)
 
 
+def print_results(
+    title,
+    results,
+    score_key=None
+):
+
+    print(
+        f"\n===== {title} ====="
+    )
+
+    for result in results:
+
+        if score_key:
+
+            print(
+                result["id"],
+                result.get(score_key),
+                result["text"]
+            )
+
+        else:
+
+            print(
+                result["id"],
+                result["text"]
+            )
+
+
 def main():
 
-    # =====================================================
-    # 1. LOAD PARENT DOCUMENTS
-    # =====================================================
+    # =========================================
+    # 1. Load Parent Documents
+    # =========================================
 
     parent_documents = load_documents(
         "data/parent_documents.json"
     )
 
-    print(
-        f"Loaded parents: "
-        f"{len(parent_documents)}"
-    )
 
-
-    # =====================================================
-    # 2. CREATE PARENT STORE
-    # =====================================================
+    # =========================================
+    # 2. Create Parent Store
+    # =========================================
 
     parent_store = ParentStore(
         parent_documents
     )
 
-    print(
-        "Parent store created."
-    )
 
-
-    # =====================================================
-    # 3. CREATE CHILD CHUNKS
-    # =====================================================
+    # =========================================
+    # 3. Create Child Chunks
+    # =========================================
 
     chunker = ChildChunker(
         chunk_size=50,
         chunk_overlap=10
     )
 
+
     all_children = []
+
 
     for document in parent_documents:
 
@@ -78,161 +122,274 @@ def main():
 
 
     print(
-        f"Created children: "
-        f"{len(all_children)}"
+        "\nTotal Parent Documents:",
+        len(parent_documents)
     )
 
-
-    # =====================================================
-    # 4. SHOW CHILD → PARENT RELATIONSHIP
-    # =====================================================
 
     print(
-        "\n===== CHILD → PARENT ====="
+        "Total Child Chunks:",
+        len(all_children)
     )
 
-    for child in all_children:
 
-        print(
-            f"\nChild: {child['id']}"
-        )
-
-        print(
-            f"Parent: {child['parent_id']}"
-        )
-
-        print(
-            f"Text: {child['text'][:100]}..."
-        )
-
-
-    # =====================================================
-    # 5. INITIALIZE EMBEDDING MODEL
-    # =====================================================
+    # =========================================
+    # 4. Initialize Embedding Model
+    # =========================================
 
     embedding_model = EmbeddingModel()
 
 
-    # =====================================================
-    # 6. CREATE CHILD EMBEDDINGS
-    # =====================================================
+    # =========================================
+    # 5. Create Child Embeddings
+    # =========================================
 
     child_texts = [
+
         child["text"]
+
         for child in all_children
     ]
 
+
     child_embeddings = (
+
         embedding_model
         .embed_documents(
             child_texts
         )
+
     )
 
 
-    print(
-        f"\nCreated embeddings: "
-        f"{len(child_embeddings)}"
-    )
-
-
-    # =====================================================
-    # 7. INITIALIZE QDRANT
-    # =====================================================
+    # =========================================
+    # 6. Initialize Qdrant
+    # =========================================
 
     vector_store = QdrantVectorStore(
-        collection_name="parent_child_rag",
+
+        collection_name=(
+            "parent_child_rag"
+        ),
+
         vector_size=384
     )
 
 
-    # =====================================================
-    # 8. STORE CHILDREN IN QDRANT
-    # =====================================================
+    # =========================================
+    # 7. Store Child Vectors
+    # =========================================
 
     vector_store.add_documents(
+
         all_children,
+
         child_embeddings
     )
 
-    print(
-        "Children stored in Qdrant."
+
+    # =========================================
+    # 8. Dense Retriever
+    # =========================================
+
+    dense_retriever = DenseRetriever(
+
+        embedding_model,
+
+        vector_store
     )
 
 
-    # =====================================================
-    # 9. CREATE PARENT-CHILD RETRIEVER
-    # =====================================================
+    # =========================================
+    # 9. Sparse Retriever
+    # =========================================
 
-    retriever = ParentChildRetriever(
-        embedding_model=embedding_model,
-        vector_store=vector_store,
-        parent_store=parent_store
+    sparse_retriever = BM25Retriever(
+
+        all_children
     )
 
 
-    # =====================================================
-    # 10. QUERY
-    # =====================================================
+    # =========================================
+    # 10. Cross Encoder
+    # =========================================
+
+    reranker = CrossEncoderReranker()
+
+
+    # =========================================
+    # 11. Parent-Child Retriever
+    # =========================================
+
+    parent_child_retriever = (
+
+        ParentChildRetriever(
+
+            dense_retriever=(
+                dense_retriever
+            ),
+
+            sparse_retriever=(
+                sparse_retriever
+            ),
+
+            fusion_function=(
+                reciprocal_rank_fusion
+            ),
+
+            reranker=reranker,
+
+            parent_store=parent_store
+        )
+    )
+
+
+    # =========================================
+    # 12. Query
+    # =========================================
 
     query = (
+
         "How many days can employees "
         "work remotely?"
     )
 
-    print(
-        f"\n===== QUERY =====\n"
-        f"{query}"
-    )
-
-
-    # =====================================================
-    # 11. RETRIEVE PARENT
-    # =====================================================
-
-    results = retriever.retrieve(
-        query=query,
-        top_k=1
-    )
-
-
-    # =====================================================
-    # 12. PRINT PARENT RESULTS
-    # =====================================================
 
     print(
-        "\n===== PARENT-CHILD RESULTS ====="
+        "\n===== QUERY ====="
     )
 
-    for result in results:
+    print(query)
+
+
+    # =========================================
+    # 13. Run Complete Pipeline
+    # =========================================
+
+    results = (
+
+        parent_child_retriever.retrieve(
+
+            query=query,
+
+            dense_top_k=10,
+
+            sparse_top_k=10,
+
+            fusion_top_k=10,
+
+            rerank_top_k=3
+        )
+    )
+
+
+    # =========================================
+    # 14. Dense Results
+    # =========================================
+
+    print_results(
+
+        "DENSE CHILDREN",
+
+        results["dense"],
+
+        score_key="score"
+    )
+
+
+    # =========================================
+    # 15. BM25 Results
+    # =========================================
+
+    print_results(
+
+        "BM25 CHILDREN",
+
+        results["sparse"],
+
+        score_key="score"
+    )
+
+
+    # =========================================
+    # 16. RRF Results
+    # =========================================
+
+    print_results(
+
+        "HYBRID / RRF CHILDREN",
+
+        results["hybrid"],
+
+        score_key="rrf_score"
+    )
+
+
+    # =========================================
+    # 17. Reranked Results
+    # =========================================
+
+    print_results(
+
+        "CROSS ENCODER RESULTS",
+
+        results["reranked"],
+
+        score_key="reranked_score"
+    )
+
+
+    # =========================================
+    # 18. Final Parent Documents
+    # =========================================
+
+    print(
+        "\n===== FINAL PARENT DOCUMENTS ====="
+    )
+
+
+    for result in results["parents"]:
+
+        parent = result["parent"]
+
+        child = result["matched_child"]
+
 
         print(
-            "\n-----------------------------"
+            "\n--------------------------------"
         )
 
-        print(
-            "Parent ID:",
-            result["id"]
-        )
 
         print(
-            "Title:",
-            result["title"]
+            "PARENT ID:",
+            parent["id"]
         )
 
-        print(
-            "Metadata:",
-            result["metadata"]
-        )
 
         print(
-            "\nComplete Parent Document:"
+            "MATCHED CHILD:",
+            child["id"]
         )
 
+
         print(
-            result["text"]
+            "RERANK SCORE:",
+            child.get(
+                "reranked_score"
+            )
+        )
+
+
+        print(
+            "\nFULL PARENT DOCUMENT:"
+        )
+
+
+        print(
+            parent["text"]
         )
 
 
 if __name__ == "__main__":
+
     main()

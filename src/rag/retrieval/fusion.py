@@ -4,40 +4,64 @@ def reciprocal_rank_fusion(
     top_n=10
 ):
 
-    rrf_scores = {}
+    scores = {}
+
     documents = {}
 
     for ranking in rankings:
 
-        for rank, result in enumerate(
+        for rank, document in enumerate(
             ranking,
-            start = 1
+            start=1
         ):
-            doc_id = result["id"]
 
-            if doc_id not in documents:
-                documents[doc_id] = result 
+            document_id = document["id"]
 
-            score = 1/ (k + rank)
+            if document_id not in scores:
 
-            rrf_scores[doc_id] = (
-                rrf_scores.get(doc_id, 0) + score 
+                scores[document_id] = 0
+
+                documents[
+                    document_id
+                ] = document
+
+            scores[document_id] += (
+                1 / (k + rank)
             )
 
 
-    fused_result = []
+    fused_results = []
 
-    for doc_id, score in rrf_scores.items():
+    for document_id, score in scores.items():
 
-        result = documents[doc_id].copy()
+        document = documents[
+            document_id
+        ]
 
-        result["rrf_score"] = score 
+        fused_results.append(
+            {
 
-        fused_result.append(result) 
+                "id": document["id"],
 
-    fused_result.sort(
-        key=lambda x: x["rrf_score"],
+                "text": document["text"],
+
+                "parent_id": document.get(
+                    "parent_id"
+                ),
+
+                "metadata": document.get(
+                    "metadata",
+                    {}
+                ),
+
+                "rrf_score": score
+            }
+        )
+
+
+    fused_results.sort(
+        key=lambda document: document["rrf_score"],
         reverse=True
     )
 
-    return fused_result[:top_n]
+    return fused_results[:top_n]

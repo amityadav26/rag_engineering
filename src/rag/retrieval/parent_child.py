@@ -30,6 +30,7 @@ class ChildChunker:
         chunks = []
 
         start = 0
+
         child_number = 1
 
         while start < len(words):
@@ -41,6 +42,7 @@ class ChildChunker:
             )
 
             child = {
+
                 "id": (
                     f'{document["id"]}'
                     f'_child_{child_number}'
@@ -60,7 +62,9 @@ class ChildChunker:
 
             child_number += 1
 
-            start = end - self.chunk_overlap
+            start = (
+                end - self.chunk_overlap
+            )
 
         return chunks
 
@@ -69,40 +73,101 @@ class ParentChildRetriever:
 
     def __init__(
         self,
-        embedding_model,
-        vector_store,
+        dense_retriever,
+        sparse_retriever,
+        fusion_function,
+        reranker,
         parent_store
     ):
 
-        self.embedding_model = embedding_model
-        self.vector_store = vector_store
+        self.dense_retriever = (
+            dense_retriever
+        )
+
+        self.sparse_retriever = (
+            sparse_retriever
+        )
+
+        self.fusion_function = (
+            fusion_function
+        )
+
+        self.reranker = reranker
+
         self.parent_store = parent_store
+
 
     def retrieve(
         self,
         query,
-        top_k=5
+        dense_top_k=10,
+        sparse_top_k=10,
+        fusion_top_k=10,
+        rerank_top_k=3
     ):
 
-        # Query → embedding
-        query_vector = (
-            self.embedding_model
-            .embed_query(query)
-        )
+        # =================================
+        # 1. Dense Retrieval
+        # =================================
 
-        # Search child vectors
-        child_results = (
-            self.vector_store.search(
-                query_vector,
-                top_k=top_k
+        dense_results = (
+            self.dense_retriever.retrieve(
+                query,
+                top_k=dense_top_k
             )
         )
 
-        parents = []
+
+        # =================================
+        # 2. Sparse Retrieval
+        # =================================
+
+        sparse_results = (
+            self.sparse_retriever.retrieve(
+                query,
+                top_k=sparse_top_k
+            )
+        )
+
+
+        # =================================
+        # 3. Hybrid Retrieval
+        # =================================
+
+        hybrid_results = (
+            self.fusion_function(
+                rankings=[
+                    dense_results,
+                    sparse_results
+                ],
+                k=60,
+                top_n=fusion_top_k
+            )
+        )
+
+
+        # =================================
+        # 4. Cross Encoder Reranking
+        # =================================
+
+        reranked_results = (
+            self.reranker.rerank(
+                query=query,
+                documents=hybrid_results,
+                top_k=rerank_top_k
+            )
+        )
+
+
+        # =================================
+        # 5. Child → Parent
+        # =================================
+
+        parent_results = []
 
         seen_parents = set()
 
-        for child in child_results:
+        for child in reranked_results:
 
             parent_id = child.get(
                 "parent_id"
@@ -115,16 +180,38 @@ class ParentChildRetriever:
                 continue
 
             parent = (
-                self.parent_store
-                .get(parent_id)
+                self.parent_store.get(
+                    parent_id
+                )
             )
 
             if parent:
 
-                parents.append(parent)
+                parent_results.append(
+                    {
+                        "parent": parent,
+                        "matched_child": child
+                    }
+                )
 
                 seen_parents.add(
                     parent_id
                 )
 
-        return parents
+
+        # =================================
+        # 6. Return all stages
+        # =================================
+
+        return {
+
+            "dense": dense_results,
+
+            "sparse": sparse_results,
+
+            "hybrid": hybrid_results,
+
+            "reranked": reranked_results,
+
+            "parents": parent_results
+        }

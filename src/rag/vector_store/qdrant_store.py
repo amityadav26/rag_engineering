@@ -64,7 +64,11 @@ class QdrantVectorStore:
                     "metadata",
                     {}
                 ),
-                "original_id": document["id"]
+                "original_id": document["id"],
+
+                "parent_id": document.get(
+                    "parent_id"
+                )
             }
 
             # Parent-child documents
@@ -112,7 +116,7 @@ class QdrantVectorStore:
                 "text": result.payload["text"],
                 
                 "parent_id": result.payload.get("parent_id"),
-                
+
                 "metadata": result.payload.get("metadata", {})
             }
             for result in results 
