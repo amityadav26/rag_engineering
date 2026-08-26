@@ -109,6 +109,18 @@ from src.rag.retrieval.router import (
     RetrievalRouter
 )
 
+# ========================================================
+#   Lesson 16 - Agentic RAG 
+# ========================================================
+
+from src.rag.agents.tools import (
+    DenseSearchTool,
+    BM25SearchTool
+)
+
+from src.rag.agents.rag_agent import (
+    RAGAgent
+)
 
 # =========================================================
 # Utility Functions
@@ -336,6 +348,69 @@ def main():
         all_children
     )
 
+    # =====================================================
+    #           TOOL INVOCATION & AGENT INVOCATION
+    # =====================================================
+
+    dense_tool = DenseSearchTool(
+        dense_retriever 
+    )
+
+    bm25_tool = BM25SearchTool(
+        sparse_retriever
+    )
+
+    rag_agent = RAGAgent(
+        dense_tool = dense_tool,
+        bm25_tool = bm25_tool
+    )
+
+    # =====================================================
+    # 19. Query
+    # =====================================================
+
+    test_queries = [
+
+    "What causes TCP connection resets?",
+
+    "Find the exact error code ERR_CONNECTION_RESET",
+
+    "What is the remote work policy?"
+
+]
+    for query in test_queries:
+
+        result = rag_agent.run(
+            query
+        )
+
+        print("\nQuery:",
+        query)
+
+        print(
+            "Tool:",
+            result["tool"]
+        )
+
+    print(
+        "\n========================================"
+    )
+
+    # print(
+    #     "QUERY:"
+    # )
+
+    # print(query)
+
+    # print(
+    #     "========================================"
+    # )
+
+
+    
+
+    
+
 
     # =====================================================
     # 12. Create Cross Encoder
@@ -422,31 +497,7 @@ def main():
     router = RetrievalRouter()
 
 
-    # =====================================================
-    # 19. Query
-    # =====================================================
-
-    query = (
-
-        "How many days can employees "
-        "work remotely?"
-    )
-
-
-    print(
-        "\n========================================"
-    )
-
-    print(
-        "QUERY:"
-    )
-
-    print(query)
-
-    print(
-        "========================================"
-    )
-
+    
 
     # =====================================================
     # 20. Main Parent-Child RAG Pipeline
