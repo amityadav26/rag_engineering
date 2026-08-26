@@ -1,0 +1,22 @@
+[
+    {
+        "id": "doc_001",
+        "text": "Service A depends on Database B."
+    },
+    {
+        "id": "doc_002",
+        "text": "Database B is hosted on Server C."
+    },
+    {
+        "id": "doc_003",
+        "text": "Server C is located in Region D."
+    },
+    {
+        "id": "doc_004",
+        "text": "Service A is owned by Company X."
+    },
+    {
+        "id": "doc_005",
+        "text": "Company X operates in the technology sector."
+    }
+]
