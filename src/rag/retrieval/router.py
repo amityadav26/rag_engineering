@@ -1,26 +1,65 @@
+from enum import Enum
+
+class RetrievalStrategy(Enum):
+
+    DENSE = "dense"
+
+    SPARSE = "sparse"
+
+    HYBRID = "hybrid"
+
+    GRAPH = "graph"
+
+    MULTI_QUERY = "multi_query"
+
+    HYDE = "hyde"
+
+
 class RetrievalRouter:
 
-    
     def route(
         self,
         query 
     ):
 
-        query_lower = query.lower()
+        query_lower = (
+            query.lower()
+        )
 
-        if (
-            "exact" in query_lower 
-            or "error code" in query_lower 
+
+        graph_keywords = [
+
+            "depends on",
+            "related to",
+            "connected to",
+            "owned by",
+            "hosted on",
+            "which server",
+            "which system"
+        ]
+
+        exact_keywords = [
+            
+            "error",
+            "exception",
+            "error code",
+            "status code"
+        ]
+
+        if any(
+            keyword in query_lower
+            for keyword in graph_keywords
         ):
 
-            return "sparse" 
+            return RetrievalStrategy.GRAPH 
 
-        if (
-            "relationship" in query_lower 
-            or "connected" in query_lower 
+
+        if any(
+            keyword in query_lower
+            for keyword in exact_keywords
         ):
 
-            return "graph" 
+            return RetrievalStrategy.HYBRID 
 
-        
-        return "hybrid"
+
+        return RetrievalStrategy.DENSE

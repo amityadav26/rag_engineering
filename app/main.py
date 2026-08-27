@@ -1,27 +1,12 @@
 import json
 
-
-# =========================================================
-# Embeddings
-# =========================================================
-
-from src.rag.embeddings.embedding_model import (
-    EmbeddingModel
+from src.rag.pipeline.rag_pipeline import (
+    RAGPipeline 
 )
 
-
-# =========================================================
-# Vector Store
-# =========================================================
-
-from src.rag.vector_store.qdrant_store import (
-    QdrantVectorStore
+from src.rag.retrieval.router import (
+    RetrievalRouter
 )
-
-
-# =========================================================
-# Retrievers
-# =========================================================
 
 from src.rag.retrieval.dense import (
     DenseRetriever
@@ -35,892 +20,180 @@ from src.rag.retrieval.fusion import (
     reciprocal_rank_fusion
 )
 
+from src.rag.embeddings.embedding_model import (
+    EmbeddingModel
+)
 
-# =========================================================
-# Reranking
-# =========================================================
+from src.rag.vector_store.qdrant_store import (
+    QdrantVectorStore
+)
 
 from src.rag.reranking.cross_encoder import (
     CrossEncoderReranker
 )
 
-
-# =========================================================
-# Parent-Child Retrieval
-# =========================================================
-
-from src.rag.retrieval.parent_child import (
-    ParentStore,
-    ChildChunker,
-    ParentChildRetriever
-)
-
-
-# =========================================================
-# Contextual Chunking
-# =========================================================
-
-from src.rag.retrieval.contextual import (
-    ContextualChunker
-)
-
-
-# =========================================================
-# Context Compression
-# =========================================================
-
-from src.rag.retrieval.compression import (
-    ContextualCompressor
-)
-
-
-# =========================================================
-# Lesson 15 - Retrieval Evaluation
-# =========================================================
-
-from src.rag.evaluation.retrieval_evaluator import (
-    RetrievalEvaluator
-)
-
-
-# =========================================================
-# Lesson 15 - Corrective RAG
-# =========================================================
-
-from src.rag.retrieval.corrective import (
-    CorrectiveRetriever
-)
-
-
-# =========================================================
-# Lesson 15 - Self RAG
-# =========================================================
-
-from src.rag.retrieval.self_rag import (
-    SelfRAG
-)
-
-
-# =========================================================
-# Lesson 15 - Adaptive RAG Router
-# =========================================================
-
-from src.rag.retrieval.router import (
-    RetrievalRouter
-)
-
-# ========================================================
-#   Lesson 16 - Agentic RAG 
-# ========================================================
-
-from src.rag.agents.tools import (
-    DenseSearchTool,
-    BM25SearchTool
-)
-
-from src.rag.agents.rag_agent import (
-    RAGAgent
-)
-
-# =========================================================
-# Utility Functions
-# =========================================================
+# =========== LOAD DOCUMENTS ============
 
 def load_documents(path):
 
     with open(
-        path,
-        "r",
-        encoding="utf-8"
-    ) as file:
+        path, "r", encoding="utf-8"
+    ) as files: 
 
-        return json.load(file)
+        return json.load(files)
 
-
-def print_results(
-    title,
-    results,
-    score_key=None
-):
-
-    print(
-        f"\n===== {title} ====="
-    )
-
-    for result in results:
-
-        if score_key:
-
-            print(
-                result["id"],
-                result.get(score_key),
-                result["text"]
-            )
-
-        else:
-
-            print(
-                result["id"],
-                result["text"]
-            )
-
-
-# =========================================================
-# MAIN
-# =========================================================
+# ========= MAIN =======================
 
 def main():
 
-    # =====================================================
-    # 1. Load Parent Documents
-    # =====================================================
+    # ========= load documents =================
 
-    parent_documents = load_documents(
-        "data/parent_documents.json"
+    documents = load_documents(
+        "data/documents.json"
     )
-
 
     print(
-        "\nTotal Parent Documents:",
-        len(parent_documents)
+        "\nTotal documents:",
+        len(documents)
     )
 
-
-    # =====================================================
-    # 2. Create Parent Store
-    # =====================================================
-
-    parent_store = ParentStore(
-        parent_documents
-    )
-
-
-    # =====================================================
-    # 3. Create Child Chunker
-    # =====================================================
-
-    chunker = ChildChunker(
-        chunk_size=50,
-        chunk_overlap=10
-    )
-
-
-    # =====================================================
-    # 4. Create Contextual Chunker
-    # =====================================================
-
-    contextual_chunker = ContextualChunker(
-        chunker=chunker
-    )
-
-
-    # =====================================================
-    # 5. Create Contextual Child Chunks
-    # =====================================================
-
-    all_children = []
-
-
-    for document in parent_documents:
-
-        children = contextual_chunker.split(
-            document
-        )
-
-        all_children.extend(
-            children
-        )
-
-
-    print(
-        "Total Child Chunks:",
-        len(all_children)
-    )
-
-
-    # =====================================================
-    # Optional - Display First Document Chunks
-    # =====================================================
-
-    document = parent_documents[0]
-
-    children = contextual_chunker.split(
-        document
-    )
-
-
-    print(
-        "\n====== CONTEXTUAL CHUNKS ======"
-    )
-
-
-    for child in children:
-
-        print(
-            "\nChild ID:",
-            child["id"]
-        )
-
-        print(
-            "Original:",
-            child["original_text"]
-        )
-
-        print(
-            "Contextual:",
-            child["text"]
-        )
-
-
-    # =====================================================
-    # 6. Initialize Embedding Model
-    # =====================================================
+    # ========== Embedding Model ================
 
     embedding_model = EmbeddingModel()
 
-
-    # =====================================================
-    # 7. Create Child Embeddings
-    # =====================================================
-
-    child_texts = [
-
-        child["text"]
-
-        for child in all_children
-    ]
-
-
-    child_embeddings = (
-
-        embedding_model
-        .embed_documents(
-            child_texts
-        )
-
-    )
-
-
-    # =====================================================
-    # 8. Initialize Qdrant
-    # =====================================================
+    #  =========== Qdrant Vector Store ==========
 
     vector_store = QdrantVectorStore(
-
-        collection_name=(
-            "contextual_child_rag"
-        ),
-
-        vector_size=384
+        collection_name = "rag_lesson18_documents",
+        vector_size = 384 
     )
 
+    # =========== Create documents embeddings ===========
 
-    # =====================================================
-    # 9. Store Child Vectors
-    # =====================================================
+    texts = [
+        document["text"]
+        for document in documents 
+    ]
+
+    embeddings = (
+        embedding_model.embed_documents(texts)
+    )
+
+    # =========== Store documents in Qdrant ===========
 
     vector_store.add_documents(
-
-        all_children,
-
-        child_embeddings
+        documents=documents,
+        embeddings=embeddings
     )
 
-
-    # =====================================================
-    # 10. Create Dense Retriever
-    # =====================================================
+    # ============== Dense Retriever ===================
 
     dense_retriever = DenseRetriever(
-
-        embedding_model,
-
-        vector_store
+        embedding_model=embedding_model,
+        vector_store=vector_store
     )
 
-
-    # =====================================================
-    # 11. Create Sparse Retriever
-    # =====================================================
+    # =============== Sparse Retriever =================
 
     sparse_retriever = BM25Retriever(
-
-        all_children
+        documents=documents 
     )
 
-    # =====================================================
-    #           TOOL INVOCATION & AGENT INVOCATION
-    # =====================================================
-
-    dense_tool = DenseSearchTool(
-        dense_retriever 
-    )
-
-    bm25_tool = BM25SearchTool(
-        sparse_retriever
-    )
-
-    rag_agent = RAGAgent(
-        dense_tool = dense_tool,
-        bm25_tool = bm25_tool
-    )
-
-    # =====================================================
-    # 19. Query
-    # =====================================================
-
-    test_queries = [
-
-    "What causes TCP connection resets?",
-
-    "Find the exact error code ERR_CONNECTION_RESET",
-
-    "What is the remote work policy?"
-
-]
-    for query in test_queries:
-
-        result = rag_agent.run(
-            query
-        )
-
-        print("\nQuery:",
-        query)
-
-        print(
-            "Tool:",
-            result["tool"]
-        )
-
-    print(
-        "\n========================================"
-    )
-
-    # print(
-    #     "QUERY:"
-    # )
-
-    # print(query)
-
-    # print(
-    #     "========================================"
-    # )
-
-
-    
-
-    
-
-
-    # =====================================================
-    # 12. Create Cross Encoder
-    # =====================================================
+    # ============== Rreranker ==========================
 
     reranker = CrossEncoderReranker()
 
-
-    # =====================================================
-    # 13. Create Parent-Child Retriever
-    # =====================================================
-
-    parent_child_retriever = (
-
-        ParentChildRetriever(
-
-            dense_retriever=(
-                dense_retriever
-            ),
-
-            sparse_retriever=(
-                sparse_retriever
-            ),
-
-            fusion_function=(
-                reciprocal_rank_fusion
-            ),
-
-            reranker=reranker,
-
-            parent_store=parent_store
-        )
-    )
-
-
-    # =====================================================
-    # 14. Contextual Compressor
-    # =====================================================
-
-    compressor = ContextualCompressor(
-        max_sentences=3
-    )
-
-
-    # =====================================================
-    # 15. Retrieval Evaluator
-    # =====================================================
-
-    evaluator = RetrievalEvaluator(
-        threshold=0.40
-    )
-
-
-    # =====================================================
-    # 16. Corrective RAG
-    # =====================================================
-
-    corrective_retriever = CorrectiveRetriever(
-
-        retriever=dense_retriever,
-
-        evaluator=evaluator,
-
-        fallback_retriever=sparse_retriever
-    )
-
-
-    # =====================================================
-    # 17. Self RAG
-    # =====================================================
-
-    self_rag = SelfRAG(
-
-        retriever=dense_retriever,
-
-        evaluator=evaluator
-    )
-
-
-    # =====================================================
-    # 18. Adaptive RAG Router
-    # =====================================================
+    # ============ Router ==============================
 
     router = RetrievalRouter()
 
+    # ============== RAG Pipeline =====================
 
-    
-
-    # =====================================================
-    # 20. Main Parent-Child RAG Pipeline
-    # =====================================================
-
-    results = (
-
-        parent_child_retriever.retrieve(
-
-            query=query,
-
-            dense_top_k=10,
-
-            sparse_top_k=10,
-
-            fusion_top_k=10,
-
-            rerank_top_k=3
-        )
+    pipeline = RAGPipeline(
+        router=router,
+        dense_retriever=dense_retriever,
+        sparse_retriever=sparse_retriever,
+        graph_retriever=None,
+        reranker=reranker 
     )
 
+    # =============== Test Queries =======================
 
-    # =====================================================
-    # 21. Evaluate Cross-Encoder Retrieval
-    # =====================================================
-
-    evaluation = evaluator.evaluate(
-
-        results["reranked"],
-
-        score_key="reranked_score"
-    )
-
-
-    print(
-        "\n===== RETRIEVAL EVALUATION ====="
-    )
-
-
-    print(
-        "Relevant:",
-        evaluation["relevant"]
-    )
-
-
-    print(
-        "Best Score:",
-        evaluation["score"]
-    )
-
-
-    # =====================================================
-    # 22. Get Parent Documents
-    # =====================================================
-
-    parent_results = [
-
-        result["parent"]
-
-        for result in results["parents"]
-    ]
-
-
-    # =====================================================
-    # 23. Compress Parent Context
-    # =====================================================
-
-    compressed_results = compressor.compress(
-
-        query=query,
-
-        documents=parent_results
-    )
-
-
-    # =====================================================
-    # 24. Print Dense Results
-    # =====================================================
-
-    print_results(
-
-        "DENSE CHILDREN",
-
-        results["dense"],
-
-        score_key="score"
-    )
-
-
-    # =====================================================
-    # 25. Print BM25 Results
-    # =====================================================
-
-    print_results(
-
-        "BM25 CHILDREN",
-
-        results["sparse"],
-
-        score_key="score"
-    )
-
-
-    # =====================================================
-    # 26. Print RRF Results
-    # =====================================================
-
-    print_results(
-
-        "HYBRID / RRF CHILDREN",
-
-        results["hybrid"],
-
-        score_key="rrf_score"
-    )
-
-
-    # =====================================================
-    # 27. Print Cross Encoder Results
-    # =====================================================
-
-    print_results(
-
-        "CROSS ENCODER RESULTS",
-
-        results["reranked"],
-
-        score_key="reranked_score"
-    )
-
-
-    # =====================================================
-    # 28. Print Final Parent Documents
-    # =====================================================
-
-    print(
-        "\n===== FINAL PARENT DOCUMENTS ====="
-    )
-
-
-    for result in results["parents"]:
-
-        parent = result["parent"]
-
-        child = result["matched_child"]
-
-
-        print(
-            "\n--------------------------------"
-        )
-
-
-        print(
-            "PARENT ID:",
-            parent["id"]
-        )
-
-
-        print(
-            "MATCHED CHILD:",
-            child["id"]
-        )
-
-
-        print(
-            "RERANK SCORE:",
-            child.get(
-                "reranked_score"
-            )
-        )
-
-
-        print(
-            "\nFULL PARENT DOCUMENT:"
-        )
-
-
-        print(
-            parent["text"]
-        )
-
-
-    # =====================================================
-    # 29. Print Compressed Context
-    # =====================================================
-
-    print(
-        "\n===== COMPRESSED CONTEXT ====="
-    )
-
-
-    for document in compressed_results:
-
-        print(
-            "\nParent:",
-            document["id"]
-        )
-
-
-        print(
-            document["compressed_text"]
-        )
-
-
-    # =====================================================
-    # LESSON 15
-    # CORRECTIVE RAG
-    # =====================================================
-
-    corrective_results = (
-
-        corrective_retriever.retrieve(
-
-            query=query,
-
-            top_k=10
-        )
-    )
-
-
-    print(
-        "\n========================================"
-    )
-
-    print(
-        "CORRECTIVE RAG"
-    )
-
-    print(
-        "========================================"
-    )
-
-
-    print(
-        "Corrected:",
-        corrective_results["corrected"]
-    )
-
-
-    print(
-        "Relevant:",
-        corrective_results["evaluation"]["relevant"]
-    )
-
-
-    print(
-        "Best Score:",
-        corrective_results["evaluation"]["score"]
-    )
-
-
-    print(
-        "\nCorrective Documents:"
-    )
-
-
-    for document in corrective_results["documents"]:
-
-        print(
-
-            document["id"],
-
-            document.get("score"),
-
-            document["text"]
-
-        )
-
-
-    # =====================================================
-    # LESSON 15
-    # SELF RAG
-    # =====================================================
-
-    self_rag_results = (
-
-        self_rag.retrieve(
-
-            query=query,
-
-            top_k=10
-        )
-    )
-
-
-    print(
-        "\n========================================"
-    )
-
-    print(
-        "SELF RAG"
-    )
-
-    print(
-        "========================================"
-    )
-
-
-    print(
-        "Retrieved:",
-        self_rag_results["retrieved"]
-    )
-
-
-    print(
-        "Relevant:",
-        self_rag_results["relevant"]
-    )
-
-
-    print(
-        "Best Score:",
-        self_rag_results["evaluation"]["score"]
-    )
-
-
-    # =====================================================
-    # LESSON 15
-    # ADAPTIVE RAG ROUTER
-    # =====================================================
-
-    test_queries = [
-
-        "Find the exact error code ERR_CONNECTION_RESET",
+    queries = [
 
         "What is the remote work policy?",
 
-        "What is the relationship between service A and service B?"
+        "What causes ERR_CONNECTION_RESET?",
+
+        "How error code TCP connection reset be diagnosed?",
+
+        "How many days can employees work remotely?",
+
+        "What server problems can cause connection failures?"
 
     ]
 
+    # ==================== Run Pipeline ====================
 
-    print(
-        "\n========================================"
-    )
-
-    print(
-        "ADAPTIVE RAG ROUTER"
-    )
-
-    print(
-        "========================================"
-    )
-
-
-    for test_query in test_queries:
-
-        route = router.route(
-            test_query
-        )
-
+    for query in queries:
 
         print(
-            "\nQuery:",
-            test_query
+            "\n\n==============================================="
         )
-
 
         print(
-            "Selected Route:",
-            route
+            "QUERY:"
         )
 
+        print(query) 
 
-    # =====================================================
-    # LESSON 15 SUMMARY
-    # =====================================================
+        result = pipeline.retrieve(
+            query=query,
+            top_k=5 
+        )
 
-    print(
-        "\n========================================"
-    )
+        # ================= Selected Strategy ===================
 
-    print(
-        "LESSON 15 SUMMARY"
-    )
+        print(
+            "\nSELECTED STRATEGY:"
+        )
 
-    print(
-        "========================================"
-    )
+        print(
+            result["strategy"]
+        )
 
+        # ================== Retrieved Documents ================
 
-    print(
-        "\n[1] Retrieval Evaluation"
-    )
+        print(
+            "\nRETRIEVED DOCUMENTS:"
+        )
 
-    print(
-        "Relevant:",
-        evaluation["relevant"]
-    )
+        for index, document in enumerate(
+            result["results"],
+            start=1
+        ):
 
+            print(
+                f"\n-------- Result {index} ------------"
+            )
 
-    print(
-        "\n[2] Corrective RAG"
-    )
+            print(
+                "ID:",
+                document.get("id")
+            )
 
-    print(
-        "Corrected:",
-        corrective_results["corrected"]
-    )
+            print(
+                "Score:",
+                document.get("score")
+            )
 
-
-    print(
-        "\n[3] Self RAG"
-    )
-
-    print(
-        "Retrieved:",
-        self_rag_results["retrieved"]
-    )
-
-
-    print(
-        "\n[4] Adaptive RAG"
-    )
-
-    print(
-        "Router tested successfully"
-    )
+            print(
+                "Text:",
+                document.get("text")
+            )
 
 
-# =========================================================
-# ENTRY POINT
-# =========================================================
+# ============= ENTRY PRINT ===============
 
 if __name__ == "__main__":
 
