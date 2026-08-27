@@ -32,6 +32,10 @@ from src.rag.reranking.cross_encoder import (
     CrossEncoderReranker
 )
 
+from src.rag.evaluation.retrieval_evaluator import (
+    RetrievalEvaluator
+)
+
 # =========== LOAD DOCUMENTS ============
 
 def load_documents(path):
@@ -93,6 +97,52 @@ def main():
         vector_store=vector_store
     )
 
+    query = "What server problems can cause connection failures?"
+
+    dense_results = dense_retriever.retrieve(
+        query=query,
+        top_k=5
+    )
+
+    relevant_ids = [
+        "doc_03"
+    ]
+
+    evaluator = RetrievalEvaluator()
+
+    hit = evaluator.hit_at_k(
+        dense_results,
+        relevant_ids=relevant_ids,
+        k=5 
+    )
+
+    recall = evaluator.recall_at_k(
+        dense_results,
+        relevant_ids=relevant_ids,
+        k=5
+    )
+
+    precision = evaluator.precision_at_k(
+        dense_results,
+        relevant_ids=relevant_ids,
+        k=5 
+    )
+
+    mrr = evaluator.reciprocal_rank(
+        dense_results,
+        relevant_ids=relevant_ids,
+    )
+
+    print("\n=========== EVALUATION ===============")
+
+    print("Hit@5:", hit)
+
+    print("Recall@5:", recall)
+
+    print("Precision@5:", precision)
+
+    print("MRR:", mrr)
+
     # =============== Sparse Retriever =================
 
     sparse_retriever = BM25Retriever(
@@ -117,80 +167,80 @@ def main():
         reranker=reranker 
     )
 
-    # =============== Test Queries =======================
+    # # =============== Test Queries =======================
 
-    queries = [
+    # queries = [
 
-        "What is the remote work policy?",
+    #     "What is the remote work policy?",
 
-        "What causes ERR_CONNECTION_RESET?",
+    #     "What causes ERR_CONNECTION_RESET?",
 
-        "How error code TCP connection reset be diagnosed?",
+    #     "How error code TCP connection reset be diagnosed?",
 
-        "How many days can employees work remotely?",
+    #     "How many days can employees work remotely?",
 
-        "What server problems can cause connection failures?"
+    #     "What server problems can cause connection failures?"
 
-    ]
+    # ]
 
-    # ==================== Run Pipeline ====================
+    # # ==================== Run Pipeline ====================
 
-    for query in queries:
+    # for query in queries:
 
-        print(
-            "\n\n==============================================="
-        )
+    #     print(
+    #         "\n\n==============================================="
+    #     )
 
-        print(
-            "QUERY:"
-        )
+    #     print(
+    #         "QUERY:"
+    #     )
 
-        print(query) 
+    #     print(query) 
 
-        result = pipeline.retrieve(
-            query=query,
-            top_k=5 
-        )
+    #     result = pipeline.retrieve(
+    #         query=query,
+    #         top_k=5 
+    #     )
 
-        # ================= Selected Strategy ===================
+    #     # ================= Selected Strategy ===================
 
-        print(
-            "\nSELECTED STRATEGY:"
-        )
+    #     print(
+    #         "\nSELECTED STRATEGY:"
+    #     )
 
-        print(
-            result["strategy"]
-        )
+    #     print(
+    #         result["strategy"]
+    #     )
 
-        # ================== Retrieved Documents ================
+    #     # ================== Retrieved Documents ================
 
-        print(
-            "\nRETRIEVED DOCUMENTS:"
-        )
+    #     print(
+    #         "\nRETRIEVED DOCUMENTS:"
+    #     )
 
-        for index, document in enumerate(
-            result["results"],
-            start=1
-        ):
+    #     for index, document in enumerate(
+    #         result["results"],
+    #         start=1
+    #     ):
 
-            print(
-                f"\n-------- Result {index} ------------"
-            )
+    #         print(
+    #             f"\n-------- Result {index} ------------"
+    #         )
 
-            print(
-                "ID:",
-                document.get("id")
-            )
+    #         print(
+    #             "ID:",
+    #             document.get("id")
+    #         )
 
-            print(
-                "Score:",
-                document.get("score")
-            )
+    #         print(
+    #             "Score:",
+    #             document.get("score")
+    #         )
 
-            print(
-                "Text:",
-                document.get("text")
-            )
+    #         print(
+    #             "Text:",
+    #             document.get("text")
+    #         )
 
 
 # ============= ENTRY PRINT ===============
