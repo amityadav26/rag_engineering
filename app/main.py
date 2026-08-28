@@ -36,6 +36,15 @@ from src.rag.evaluation.retrieval_evaluator import (
     RetrievalEvaluator
 )
 
+from src.rag.evaluation.evaluate_retrievers import (
+    RetrieverEvaluatorRunner,
+    load_evalauation_dataset
+)
+
+from src.rag.retrieval.hybrid import (
+    HybridRetriever
+)
+
 # =========== LOAD DOCUMENTS ============
 
 def load_documents(path):
@@ -97,52 +106,9 @@ def main():
         vector_store=vector_store
     )
 
-    query = "What server problems can cause connection failures?"
+    query = "What causes TCP connection resets?"
 
-    dense_results = dense_retriever.retrieve(
-        query=query,
-        top_k=5
-    )
-
-    relevant_ids = [
-        "doc_03"
-    ]
-
-    evaluator = RetrievalEvaluator()
-
-    hit = evaluator.hit_at_k(
-        dense_results,
-        relevant_ids=relevant_ids,
-        k=5 
-    )
-
-    recall = evaluator.recall_at_k(
-        dense_results,
-        relevant_ids=relevant_ids,
-        k=5
-    )
-
-    precision = evaluator.precision_at_k(
-        dense_results,
-        relevant_ids=relevant_ids,
-        k=5 
-    )
-
-    mrr = evaluator.reciprocal_rank(
-        dense_results,
-        relevant_ids=relevant_ids,
-    )
-
-    print("\n=========== EVALUATION ===============")
-
-    print("Hit@5:", hit)
-
-    print("Recall@5:", recall)
-
-    print("Precision@5:", precision)
-
-    print("MRR:", mrr)
-
+    
     # =============== Sparse Retriever =================
 
     sparse_retriever = BM25Retriever(
@@ -169,79 +135,80 @@ def main():
 
     # # =============== Test Queries =======================
 
-    # queries = [
 
-    #     "What is the remote work policy?",
 
-    #     "What causes ERR_CONNECTION_RESET?",
+    evaluation_dataset = load_evalauation_dataset(
+        "data/evaluation_dataset.json"
+    )
 
-    #     "How error code TCP connection reset be diagnosed?",
+    evaluator = RetrievalEvaluator()
 
-    #     "How many days can employees work remotely?",
+    runner = RetrieverEvaluatorRunner(
+        evaluator=evaluator
+    )
 
-    #     "What server problems can cause connection failures?"
+    dense_metrics = runner.evaluate(
+        retriever=dense_retriever,
+        evaluation_dataset=evaluation_dataset,
+        top_k=5 
+    )
 
-    # ]
+    print(
+        "\n========== DENSE EVALUATION =========="
+    )
 
-    # # ==================== Run Pipeline ====================
+    for metric, value in dense_metrics.items():
 
-    # for query in queries:
+        print(
+            metric,
+            ":",
+            round(value, 4)
+        )
 
-    #     print(
-    #         "\n\n==============================================="
-    #     )
+    sparse_retriever = BM25Retriever(
+        documents=documents 
+    )
 
-    #     print(
-    #         "QUERY:"
-    #     )
+    bm25_metrics = runner.evaluate(
+        retriever=sparse_retriever,
+        evaluation_dataset=evaluation_dataset,
+        top_k=5 
+    )
 
-    #     print(query) 
+    print(
+        "\n========= BM25 EVALUATION ==========="
+    )
 
-    #     result = pipeline.retrieve(
-    #         query=query,
-    #         top_k=5 
-    #     )
+    for metric, value in bm25_metrics.items():
 
-    #     # ================= Selected Strategy ===================
+        print(
+            metric,
+            ":",
+            round(value, 4)
+        )
 
-    #     print(
-    #         "\nSELECTED STRATEGY:"
-    #     )
+    hybrid_retriever = HybridRetriever(
+        dense_retriever=dense_retriever,
+        sparse_retriever=sparse_retriever
+    )
 
-    #     print(
-    #         result["strategy"]
-    #     )
+    hybrid_metrics = runner.evaluate(
+        retriever=hybrid_retriever,
+        evaluation_dataset=evaluation_dataset,
+        top_k=5 
+    )
 
-    #     # ================== Retrieved Documents ================
+    print(
+        "\n========= HYBRID EVALUATION ==========="
+    )
 
-    #     print(
-    #         "\nRETRIEVED DOCUMENTS:"
-    #     )
+    for metric, value in hybrid_metrics.items():
 
-    #     for index, document in enumerate(
-    #         result["results"],
-    #         start=1
-    #     ):
-
-    #         print(
-    #             f"\n-------- Result {index} ------------"
-    #         )
-
-    #         print(
-    #             "ID:",
-    #             document.get("id")
-    #         )
-
-    #         print(
-    #             "Score:",
-    #             document.get("score")
-    #         )
-
-    #         print(
-    #             "Text:",
-    #             document.get("text")
-    #         )
-
+        print(
+            metric,
+            ":",
+            round(value, 4)
+        )
 
 # ============= ENTRY PRINT ===============
 

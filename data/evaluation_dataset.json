@@ -1,0 +1,18 @@
+[
+    {
+        "question": "How many days can employees work remotely?",
+        "relevant_ids": ["doc_004"]
+    },
+    {
+        "question": "What is the remote work policy?",
+        "relevant_ids": ["doc_001"]
+    },
+    {
+        "question": "What causes TCP connection resets?",
+        "relevant_ids": ["doc_002"]
+    },
+    {
+        "question": "How can a TCP connection reset be diagnosed?",
+        "relevant_ids": ["doc_002"]
+    }
+]
