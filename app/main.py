@@ -210,6 +210,38 @@ def main():
             round(value, 4)
         )
 
+    
+    retrievers = {
+
+        "Dense": dense_retriever,
+
+        "BM25": sparse_retriever,
+
+        "Hybrid": hybrid_retriever
+    }
+
+    comparison = runner.compare(
+        retrievers=retrievers,
+        evaluation_dataset=evaluation_dataset,
+        top_k=5 
+    )
+
+    print (
+        "\n========== RETRIEVER COMPARSION =========="
+    )
+
+    for retriever_name , metrics in comparison.items():
+
+        print(
+            f"\n{retriever_name}"
+        )
+
+        for metric, value in metrics.items():
+
+            print(
+                f"{metric}: {value:.4f}"
+            )
+
 # ============= ENTRY PRINT ===============
 
 if __name__ == "__main__":

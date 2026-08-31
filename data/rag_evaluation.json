@@ -1,0 +1,16 @@
+[
+    {
+        "question": "How many days can employees work remotely?",
+        "contexts": [
+            "Employees can work remotely up to three days per week."
+        ],
+        "answer": "Employees can work remotely up to three days per week."
+    },
+    {
+        "question": "What is the remote work policy?",
+        "contexts": [
+            "Employees can work remotely up to three days per week."
+        ],
+        "answer": "Employees may work remotely for up to three days per week."
+    }
+]

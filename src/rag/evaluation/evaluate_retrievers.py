@@ -97,3 +97,29 @@ class RetrieverEvaluatorRunner:
             sum(mrr_scores) / total 
         
         }
+
+    def compare(
+        self,
+        retrievers,
+        evaluation_dataset,
+        top_k=5 
+    ):
+
+        comparison = {}
+
+        for name, retriever in retrievers.items():
+
+            print(
+                f"\nEvaluating: {name}" 
+            )
+
+            metrics = self.evaluate(
+                retriever=retriever,
+                evaluation_dataset=evaluation_dataset,
+                top_k=top_k 
+            )
+
+            comparison[name] = metrics 
+
+        return comparison
+        
